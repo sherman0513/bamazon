@@ -1,29 +1,26 @@
-let inquirer = require("inquirer");
-let mysql = require("mysql");
+var mysql = require("mysql");
+var inquirer = require("inquirer");
 
-let connection = mysql.createConnection({
-    host: 'localhost',
-    port: 3306,
-    user: 'root',
-    password: 'password',
-    database: 'bamazon'
+var connection = mysql.createConnection({
+	host:"localhost",
+	port:3306,
+	user:"root",
+	password:"password",
+	database:"bamazon"
 });
-
-// maybe create let(var) for current inventory levels
-
 
 function stockedItems() {
 
     let items = [];
     // let stock = [];
 
-    connection.query('select * from products', function (err, results) {
+    connection.query('select * from products', function(err, results) {
         if (err) {
             console.log(err);
             return;
         }
 
-        items = results.map(result => (["id: " + result.item_id, result.product_name, "$" + result.price])),
+        items = results.map(result => ({ id: result.item_id, product: result.product_name, price: "$" + result.price, inStock: result.stock_quantity })),
             console.log(items);
 
         // stock = results.map(result => result.stock_quantity),
@@ -41,41 +38,21 @@ function stockedItems() {
                 name: 'howMany'
             }
         ]).then(purchased => {
-            console.log(purchased.select, purchased.howMany);
-
+            // console.log(purchased.select, purchased.howMany);
+            let amount = purchased.howMany;
+            console.log('amount: ', amount);
             let chosenItem;
             items.forEach(result => {
-                result = purchased.select;
-                chosenItem = result;
-                console.log(chosenItem);
+                // console.log(result);
+                if (result.id === parseInt(purchased.select)) {
+                    console.log('result.select: ', purchased.select);
+                    console.log('result.id: ', result.id);
+                    chosenItem = result.id;
+                    console.log(chosenItem);
+                };
             });
-
-            if (chosenItem.stock_quantity >= purchased.howMany) {
-                connection.query(
-                    "update products set ? where ?",
-                    [
-                        { stock_quantity: purchased.howMany },
-                        { item_id: chosedItem.item_id }
-                    ],
-                    function(err) {
-                        if (err) throw (err);
-                        console.log("Purchase was successful!");
-                    }
-                );
-            } else {
-                console.log("Insufficient quantity!");
-            }
-
-            purchased.howMany
         });
-
-    })
-
-    connection.end();
-
-}
+    });
+};
 
 stockedItems();
-
-
-
